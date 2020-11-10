@@ -1,47 +1,34 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"HVB_Stock_API/api"
+	"HVB_Stock_API/internal/repository"
+	"HVB_Stock_API/internal/service"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"log"
 )
 
-type Result struct {
-	Price Price `json:"price"`
-}
-
-type Price struct {
-	RegularMarketPrice RegularMarketPrice `json:"regularMarketPrice"`
-}
-
-type RegularMarketPrice struct {
-	Raw float64 `json:"raw"`
+// init is invoked before main()
+func init() {
+	// loads values from .env into the system
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
 }
 
 func main() {
 
-	url := "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-statistics?symbol=TSLA&region=DE"
-	req, _ := http.NewRequest("GET", url, nil)
+	router := gin.Default()
 
-	req.Header.Add("x-rapidapi-key", "4dfc8434famsh4013439d5a8c726p1a0e1djsn1e63e0ec5b5b")
-	req.Header.Add("x-rapidapi-host", "apidojo-yahoo-finance-v1.p.rapidapi.com")
+	stockRepository := repository.ProvideStockRepository()
 
-	res, _ := http.DefaultClient.Do(req)
+	stockService := service.ProvideStockService(stockRepository)
 
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	api.CreateRouter(router, stockService)
 
-	var ausgabe Result
-
-	err := json.Unmarshal(body, &ausgabe)
-	if err != nil {
-		fmt.Print(err)
+	if err := router.Run("localhost:8080"); err != nil {
+		panic(err)
 	}
-	fmt.Printf("%+v\n", ausgabe.Price.RegularMarketPrice.Raw)
-
-	//fmt.Println(res)
-
-	//fmt.Println(string(body))
 
 }
