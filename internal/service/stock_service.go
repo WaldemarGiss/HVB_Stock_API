@@ -2,6 +2,7 @@ package service
 
 import (
 	"HVB_Stock_API/internal/entities"
+	"strings"
 )
 
 type stockRepository interface {
@@ -19,6 +20,8 @@ func ProvideStockService(repository stockRepository) *StockService {
 func (stockService *StockService) Calculate(tenant string) float64 {
 
 	stock, xRate := stockService.stockRepository.Calculate(tenant)
-
+	if strings.Contains(strings.ToLower(tenant), "eur") {
+		return stock.Raw
+	}
 	return stock.Raw / xRate
 }

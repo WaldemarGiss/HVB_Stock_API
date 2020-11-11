@@ -19,8 +19,8 @@ func ProvideStockAPI(service stockService) *StockAPI {
 
 func (stockAPI *StockAPI) Calculate(req *gin.Context) {
 	//TODO: DIE TENANTS ABFANGEN
-	tenant := req.Param("vicci_tenant")
-	ret := stockAPI.stockService.Calculate(tenant)
+	share := req.Param("share")
+	ret := stockAPI.stockService.Calculate(share)
 	if ret != 0 {
 		req.JSON(http.StatusOK, ret)
 	} else {
@@ -30,5 +30,5 @@ func (stockAPI *StockAPI) Calculate(req *gin.Context) {
 
 func CreateRouter(router *gin.Engine, stockService stockService) {
 	stockController := ProvideStockAPI(stockService)
-	router.GET("/tenant/:vicci_tenant/carlines", stockController.Calculate)
+	router.GET("/calcGain/:share", stockController.Calculate)
 }
