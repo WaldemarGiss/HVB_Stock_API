@@ -1,12 +1,13 @@
 package service
 
 import (
-	"HVB_Stock_API/internal/entities"
+	"HVB_Stock_API/api/customError"
+	"HVB_Stock_API/api/dto"
 	"strings"
 )
 
 type stockRepository interface {
-	Calculate(tenant string) (entities.RegularMarketPrice, float64)
+	Calculate(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock)
 }
 
 type StockService struct {
@@ -17,11 +18,19 @@ func ProvideStockService(repository stockRepository) *StockService {
 	return &StockService{stockRepository: repository}
 }
 
-func (stockService *StockService) Calculate(tenant string) float64 {
+func (stockService *StockService) Calculate(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock) {
 
-	stock, xRate := stockService.stockRepository.Calculate(tenant)
-	if strings.Contains(strings.ToLower(tenant), "eur") {
-		return stock.Raw
+	response, err := stockService.stockRepository.Calculate(key, responseEntity)
+
+	if err.Code != 0 {
+		return dto.OutputDTO{}, err
 	}
-	return stock.Raw / xRate
+
+	if strings.Contains(strings.ToLower(response.Share), "eur") {
+		response.Value = (response.Value - response.Price) * response.Numbers
+		return response, customError.ErrorStock{}
+	}
+
+	response.Value = ((response.Value / response.Xrate) - response.Price) * response.Numbers
+	return response, customError.ErrorStock{}
 }

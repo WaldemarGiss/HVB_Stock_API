@@ -1,0 +1,10 @@
+[x] besten externen anbieter finden
+[x] die nötige anfrage suchen
+[x] response filtern
+[x] ordner/daten und layer strukturen aufsetzen
+[x] nötige enteties und DTO und mapper bauen
+[x] environment file befüllen mit KEY's
+[x] im service layer die geschäftslogik einbauen
+[x] error abfangen
+[ ] 500er abfangen
+[ ] testing
