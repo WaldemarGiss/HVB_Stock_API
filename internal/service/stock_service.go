@@ -7,7 +7,7 @@ import (
 )
 
 type stockRepository interface {
-	Calculate(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock)
+	CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock)
 }
 
 type StockService struct {
@@ -18,19 +18,19 @@ func ProvideStockService(repository stockRepository) *StockService {
 	return &StockService{stockRepository: repository}
 }
 
-func (stockService *StockService) Calculate(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock) {
+func (stockService *StockService) CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock) {
 
-	response, err := stockService.stockRepository.Calculate(key, responseEntity)
+	response, err := stockService.stockRepository.CalculateEarning(key, responseEntity)
 
-	if err.Code != 0 {
+	if err.Code != 200 {
 		return dto.OutputDTO{}, err
 	}
 
 	if strings.Contains(strings.ToLower(response.Share), "eur") {
 		response.Value = (response.Value - response.Price) * response.Numbers
-		return response, customError.ErrorStock{}
+		return response, customError.ErrorStock{Code: 200, Text: "status OK"}
 	}
 
 	response.Value = ((response.Value / response.Xrate) - response.Price) * response.Numbers
-	return response, customError.ErrorStock{}
+	return response, customError.ErrorStock{Code: 200, Text: "status OK"}
 }

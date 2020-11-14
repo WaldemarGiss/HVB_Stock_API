@@ -6,5 +6,5 @@
 [x] environment file befüllen mit KEY's
 [x] im service layer die geschäftslogik einbauen
 [x] error abfangen
-[ ] 500er abfangen
+[x] 500er abfangen
 [ ] testing
