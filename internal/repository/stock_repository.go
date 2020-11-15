@@ -18,7 +18,7 @@ func ProvideStockRepository() *StockRepository {
 	return &StockRepository{}
 }
 
-func (stockRepository StockRepository) CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock) {
+func (stockRepository StockRepository) CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, error) {
 
 	host, baseUrl := getEnv()
 
@@ -28,7 +28,7 @@ func (stockRepository StockRepository) CalculateEarning(key string, responseEnti
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: 500, Text: "internal server error"}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 	if key != "" {
 		req.Header.Add("x-rapidapi-key", key)
@@ -37,43 +37,43 @@ func (stockRepository StockRepository) CalculateEarning(key string, responseEnti
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: 500, Text: "internal server error"}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode == 403 {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
 	} else if res.StatusCode == 401 {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: 500, Text: "internal server error"}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	var response entities.Result
 
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: 500, Text: "internal server error"}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	responseEntity.Value = response.Price.RegularMarketPrice.Raw
 
 	if responseEntity.Value == 0 {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: 204, Text: "no content"}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 204, Text: "no content"}
 	}
 
 	fak, err := stockRepository.GetCurrency(key)
 	if err != nil {
-		return dto.OutputDTO{}, customError.ErrorStock{Code: 500, Text: "internal server error"}
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	responseEntity.Xrate = fak.Raw
 
-	return responseEntity, customError.ErrorStock{Code: 200, Text: "Status OK"}
+	return responseEntity, &customError.ErrorStock{Code: 200, Text: "Status OK"}
 }
 
 func (stockRepository StockRepository) GetCurrency(key string) (entities.RegularMarketPrice, error) {

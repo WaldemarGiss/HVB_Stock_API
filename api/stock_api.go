@@ -3,7 +3,7 @@ package api
 import (
 	"HVB_Stock_API/api/customError"
 	"HVB_Stock_API/api/dto"
-	"fmt"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -11,7 +11,7 @@ import (
 )
 
 type stockService interface {
-	CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, customError.ErrorStock)
+	CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, error)
 }
 
 type StockAPI struct {
@@ -32,6 +32,7 @@ func (stockAPI *StockAPI) CalculateEarning(req *gin.Context) {
 		req.JSON(http.StatusBadRequest, "bad request")
 	} else {
 		var responseEntity dto.OutputDTO
+		var stockError *customError.ErrorStock
 
 		responseEntity.Share = share
 		responseEntity.Numbers, _ = strconv.ParseFloat(strings.Replace(number, ",", ".", 1), 64)
@@ -40,17 +41,19 @@ func (stockAPI *StockAPI) CalculateEarning(req *gin.Context) {
 		key := req.GetHeader("x-rapidapi-key")
 
 		ret, err := stockAPI.stockService.CalculateEarning(key, responseEntity)
-		fmt.Println(err.Code)
-		if err.Code == 200 {
-			req.JSON(http.StatusOK, ret)
-		} else if err.Code == 204 {
-			req.JSON(http.StatusNoContent, err.Text)
-		} else if err.Code == 401 {
-			req.JSON(http.StatusUnauthorized, err.Text)
-		} else if err.Code == 403 {
-			req.JSON(http.StatusForbidden, err.Text)
-		} else if err.Code == 500 {
-			req.JSON(http.StatusInternalServerError, err.Text)
+
+		if errors.As(err, &stockError) {
+			if stockError.Code == 200 {
+				req.JSON(http.StatusOK, ret)
+			} else if stockError.Code == 204 {
+				req.JSON(http.StatusNoContent, stockError.Text)
+			} else if stockError.Code == 401 {
+				req.JSON(http.StatusUnauthorized, stockError.Text)
+			} else if stockError.Code == 403 {
+				req.JSON(http.StatusForbidden, stockError.Text)
+			} else if stockError.Code == 500 {
+				req.JSON(http.StatusInternalServerError, stockError.Text)
+			}
 		}
 	}
 }
