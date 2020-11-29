@@ -171,29 +171,6 @@ func TestStockRepository_CalculateEarning(t *testing.T) {
 		assert.Equal(t, errorResponse, err)
 		assert.Equal(t, dto.OutputDTO{}, output)
 	})
-
-	//TODO: HIER
-	/*t.Run("CalculateEarningInternalErrorFromGetCurrency", func(t *testing.T) {
-
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			io.WriteString(w, `{"price": {"regularMarketPrice":{"raw":1000}}}`)
-		}))
-		defer server.Close()
-
-		os.Setenv("BASE_URL", server.URL+"/")
-		os.Setenv("host", "apidojo-yahoo-finance-v1.p.rapidapi.com")
-
-		errorResponse := &customError.ErrorStock{Code: 500, Text: "internal server error"}
-
-		mockFinanceApi := MockFinanceAPI{}
-		mockFinanceApi.On(getCurrency, "").Return(dto.OutputDTO{}, errorResponse)
-
-		output, err := ProvideStockRepository().CalculateEarning(key, responseEntity)
-
-		assert.Equal(t, errorResponse, err)
-		assert.Equal(t, dto.OutputDTO{}, output)
-	})*/
 }
 
 func (mockFinanceAPI *MockFinanceAPI) GetCurrency(key string) (entities.RegularMarketPrice, error) {

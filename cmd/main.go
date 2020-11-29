@@ -6,14 +6,13 @@ import (
 	"HVB_Stock_API/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"log"
 )
 
 // init is invoked before main()
 func init() {
 	// loads values from .env into the system
 	if err := godotenv.Load(); err != nil {
-		log.Print("No .env file found")
+		panic("No .env file found")
 	}
 }
 
@@ -30,5 +29,4 @@ func main() {
 	if err := router.Run("localhost:8080"); err != nil {
 		panic(err)
 	}
-
 }

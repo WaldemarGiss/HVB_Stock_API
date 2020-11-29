@@ -7,4 +7,10 @@
 [x] im service layer die geschäftslogik einbauen
 [x] error abfangen
 [x] 500er abfangen
-[ ] testing
+[x] testing
+
+
+token = 4dfc8434famsh4013439d5a8c726p1a0e1djsn1e63e0ec5b5b
+
+Beispiel GET request:
+http://localhost:8080/HVB_Stock_API/calcGain?share=TSLA&number=1&singlePrice=100
