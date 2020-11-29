@@ -5,7 +5,6 @@ import (
 	"HVB_Stock_API/api/dto"
 	"HVB_Stock_API/internal/entities"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -23,27 +22,22 @@ func (stockRepository StockRepository) CalculateEarning(key string, responseEnti
 	//fetch password
 	host, ok := os.LookupEnv("HOST")
 	if ok != true {
-		fmt.Println("can't find a HOST")
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	//fetch baseURL
 	baseUrl, ok := os.LookupEnv("BASE_URL")
 	if ok != true {
-		fmt.Println("can't find a base_url")
+		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	url := baseUrl + "get-statistics?symbol=" + responseEntity.Share + "&region=DE"
 	//url := "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-holders"
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequest("GET", url, nil)
 
-	if err != nil {
-		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
-	}
-	if key != "" {
-		req.Header.Add("x-rapidapi-key", key)
-		req.Header.Add("x-rapidapi-host", host)
-	}
+	req.Header.Add("x-rapidapi-key", key)
+	req.Header.Add("x-rapidapi-host", host)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -58,10 +52,7 @@ func (stockRepository StockRepository) CalculateEarning(key string, responseEnti
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
-	}
+	body, _ := ioutil.ReadAll(res.Body)
 
 	var response entities.Result
 
@@ -101,29 +92,23 @@ func (stockRepository StockRepository) GetCurrency(key string) (entities.Regular
 	}
 
 	url := baseUrl + "get-statistics?symbol=EURUSD=X&region=DE"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return entities.RegularMarketPrice{}, err
-	}
+	req, _ := http.NewRequest("GET", url, nil)
 
-	if key != "" {
-		req.Header.Add("x-rapidapi-key", key)
-		req.Header.Add("x-rapidapi-host", host)
-	}
+	req.Header.Add("x-rapidapi-key", key)
+	req.Header.Add("x-rapidapi-host", host)
+
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return entities.RegularMarketPrice{}, err
+		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
-
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return entities.RegularMarketPrice{}, err
-	}
+
+	body, _ := ioutil.ReadAll(res.Body)
+
 	var response entities.Result
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return entities.RegularMarketPrice{}, err
+		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
 	return response.Price.RegularMarketPrice, nil
