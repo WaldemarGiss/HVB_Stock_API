@@ -20,7 +20,17 @@ func ProvideStockRepository() *StockRepository {
 
 func (stockRepository StockRepository) CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, error) {
 
-	host, baseUrl := getEnv()
+	//fetch password
+	host, ok := os.LookupEnv("HOST")
+	if ok != true {
+		fmt.Println("can't find a HOST")
+	}
+
+	//fetch baseURL
+	baseUrl, ok := os.LookupEnv("BASE_URL")
+	if ok != true {
+		fmt.Println("can't find a base_url")
+	}
 
 	url := baseUrl + "get-statistics?symbol=" + responseEntity.Share + "&region=DE"
 	//url := "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-holders"
@@ -78,7 +88,17 @@ func (stockRepository StockRepository) CalculateEarning(key string, responseEnti
 
 func (stockRepository StockRepository) GetCurrency(key string) (entities.RegularMarketPrice, error) {
 
-	host, baseUrl := getEnv()
+	//fetch password
+	host, ok := os.LookupEnv("HOST")
+	if ok != true {
+		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
+	}
+
+	//fetch baseURL
+	baseUrl, ok := os.LookupEnv("BASE_URL")
+	if ok != true {
+		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
+	}
 
 	url := baseUrl + "get-statistics?symbol=EURUSD=X&region=DE"
 	req, err := http.NewRequest("GET", url, nil)
@@ -101,28 +121,10 @@ func (stockRepository StockRepository) GetCurrency(key string) (entities.Regular
 		return entities.RegularMarketPrice{}, err
 	}
 	var response entities.Result
-
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return entities.RegularMarketPrice{}, err
 	}
 
 	return response.Price.RegularMarketPrice, nil
-}
-
-func getEnv() (string, string) {
-
-	//fetch password
-	host, ok := os.LookupEnv("HOST")
-	if ok != true {
-		fmt.Println("can't find a HOST")
-	}
-
-	//fetch baseURL
-	baseURL, ok := os.LookupEnv("BASE_URL")
-	if ok != true {
-		fmt.Println("can't find a base_url")
-	}
-
-	return host, baseURL
 }

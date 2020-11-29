@@ -8,5 +8,5 @@ type ErrorStock struct {
 }
 
 func (err *ErrorStock) Error() string {
-	return fmt.Sprintf("stock-api returned status : %v \n and text : %v", err.Code, err.Text)
+	return fmt.Sprintf("stock-api returned Status : %v and text : %v", err.Code, err.Text)
 }

@@ -14,15 +14,15 @@ type stockService interface {
 	CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, error)
 }
 
-type StockAPI struct {
+type StockController struct {
 	stockService stockService
 }
 
-func ProvideStockAPI(service stockService) *StockAPI {
-	return &StockAPI{stockService: service}
+func ProvideStockController(service stockService) *StockController {
+	return &StockController{stockService: service}
 }
 
-func (stockAPI *StockAPI) CalculateEarning(req *gin.Context) {
+func (stockController *StockController) CalculateEarning(req *gin.Context) {
 
 	share := req.Query("share")
 	number := req.Query("number")
@@ -40,7 +40,7 @@ func (stockAPI *StockAPI) CalculateEarning(req *gin.Context) {
 
 		key := req.GetHeader("x-rapidapi-key")
 
-		ret, err := stockAPI.stockService.CalculateEarning(key, responseEntity)
+		ret, err := stockController.stockService.CalculateEarning(key, responseEntity)
 
 		if errors.As(err, &stockError) {
 			if stockError.Code == 200 {
@@ -59,6 +59,6 @@ func (stockAPI *StockAPI) CalculateEarning(req *gin.Context) {
 }
 
 func CreateRouter(router *gin.Engine, stockService stockService) {
-	stockController := ProvideStockAPI(stockService)
+	stockController := ProvideStockController(stockService)
 	router.GET("HVB_Stock_API/calcGain", stockController.CalculateEarning)
 }

@@ -32,9 +32,10 @@ func (stockService *StockService) CalculateEarning(key string, responseEntity dt
 
 	if strings.Contains(strings.ToLower(response.Share), "eur") {
 		response.Value = (response.Value - response.Price) * response.Numbers
-		return response, &customError.ErrorStock{Code: 200, Text: "status OK"}
+		return response, &customError.ErrorStock{Code: 200, Text: "Status OK"}
 	}
 
 	response.Value = ((response.Value / response.Xrate) - response.Price) * response.Numbers
-	return response, &customError.ErrorStock{Code: 200, Text: "status OK"}
+
+	return response, &customError.ErrorStock{Code: 200, Text: "Status OK"}
 }
