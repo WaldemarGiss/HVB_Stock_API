@@ -13,4 +13,7 @@
 token = 4dfc8434famsh4013439d5a8c726p1a0e1djsn1e63e0ec5b5b
 
 Beispiel GET request:
+
 http://localhost:8080/HVB_Stock_API/calcGain?share=TSLA&number=1&singlePrice=100
+
+http://localhost:8080/HVB_Stock_API/calcGain?share=BTC-EUR&number=3&singlePrice=5000

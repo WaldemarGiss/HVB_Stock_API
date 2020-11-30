@@ -19,97 +19,137 @@ func ProvideStockRepository() *StockRepository {
 
 func (stockRepository StockRepository) CalculateEarning(key string, responseEntity dto.OutputDTO) (dto.OutputDTO, error) {
 
-	//fetch password
+	//fetch password from .env.file.
+	//return empty entity with filled errEntity if not OK
 	host, ok := os.LookupEnv("HOST")
 	if ok != true {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
-	//fetch baseURL
+	//fetch baseURL from .env.file.
+	//return empty entity with filled errEntity if not OK
 	baseUrl, ok := os.LookupEnv("BASE_URL")
 	if ok != true {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
+	//assemble URL for request
 	url := baseUrl + "get-statistics?symbol=" + responseEntity.Share + "&region=DE"
 	//url := "https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-holders"
 
+	//initialize the request.
+	//ignoring error. it will catched at http.DefaultClient.Do()
 	req, _ := http.NewRequest("GET", url, nil)
 
+	//fetch necessary information from header
 	req.Header.Add("x-rapidapi-key", key)
 	req.Header.Add("x-rapidapi-host", host)
 
+	//client do http.NewRequest.
+	//return empty entity and filled errEntity if Client Do fail
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
-
 	defer res.Body.Close()
 
+	//return reponse directly from extern finance api
+	//empty entity and filled errEntity
 	if res.StatusCode == 403 {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
 	} else if res.StatusCode == 401 {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: res.StatusCode, Text: res.Status}
 	}
 
+	//read response from Client.
+	//ignoring error. will be catched in json.unmarshal
 	body, _ := ioutil.ReadAll(res.Body)
 
+	//declare responseEntity
 	var response entities.Result
 
+	//unmarshal responseClient into responseEntity
+	//throw empty entity and filled errEntity
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
+	//fill responseEntity with value
 	responseEntity.Value = response.Price.RegularMarketPrice.Raw
 
+	//return empty entity and filled errEntity
 	if responseEntity.Value == 0 {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: 204, Text: "no content"}
 	}
 
+	//get exchangerate EUR/USD
+	//return empty entity and filled errEntity if err != nil
 	fak, err := stockRepository.GetCurrency(key)
 	if err != nil {
 		return dto.OutputDTO{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
+	//fill responseEntity with exchangeRate
 	responseEntity.Xrate = fak.Raw
 
+	//return filled entity and filled errEntity
 	return responseEntity, &customError.ErrorStock{Code: 200, Text: "Status OK"}
 }
 
+//
+//Method to get the current exchange-rate EUR/USD
+//
 func (stockRepository StockRepository) GetCurrency(key string) (entities.RegularMarketPrice, error) {
 
-	//fetch password
+	//fetch password from .env.file.
+	//return empty entity with filled errEntity if not OK
 	host, ok := os.LookupEnv("HOST")
 	if ok != true {
 		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
-	//fetch baseURL
+	//fetch baseURL from .env.file.
+	//return empty entity with filled errEntity if not OK
 	baseUrl, ok := os.LookupEnv("BASE_URL")
 	if ok != true {
 		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
+	//assemble URL for request
 	url := baseUrl + "get-statistics?symbol=EURUSD=X&region=DE"
-	req, _ := http.NewRequest("GET", url, nil)
 
-	req.Header.Add("x-rapidapi-key", key)
-	req.Header.Add("x-rapidapi-host", host)
+	//initialize the request.
+	//ignoring error. it will catched at http.DefaultClient.Do()
+	request, _ := http.NewRequest("GET", url, nil)
 
-	res, err := http.DefaultClient.Do(req)
+	//fetch necessary information from header
+	request.Header.Add("x-rapidapi-key", key)
+	request.Header.Add("x-rapidapi-host", host)
+
+	//client do http.NewRequest.
+	//return empty entity and filled errEntity if Client Do fail
+	responseClient, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
-	defer res.Body.Close()
+	defer responseClient.Body.Close()
 
-	body, _ := ioutil.ReadAll(res.Body)
+	//read response from Client.
+	//ignoring error. will be catched in json.unmarshal
+	body, _ := ioutil.ReadAll(responseClient.Body)
 
-	var response entities.Result
-	err = json.Unmarshal(body, &response)
+	//declare responseEntity
+	var responseEntity entities.Result
+
+	//unmarshal responseClient into responseEntity
+	//throw empty entity and filled errEntity
+	err = json.Unmarshal(body, &responseEntity)
 	if err != nil {
 		return entities.RegularMarketPrice{}, &customError.ErrorStock{Code: 500, Text: "internal server error"}
 	}
 
-	return response.Price.RegularMarketPrice, nil
+	//after success return responseEntity.Price.RegularMarketPrice
+	//and error as nil
+	return responseEntity.Price.RegularMarketPrice, nil
 }
